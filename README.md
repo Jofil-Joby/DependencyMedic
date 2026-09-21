@@ -1,67 +1,133 @@
 # DependencyMedic
 
-> Portable agent for detecting missing or unclear dependency manifests and improving dependency hygiene.
+> A portable engineering agent for **project dependencies**.
 
-## What it does
+DependencyMedic inspects observable project evidence, detects **missing dependency manifests**, and produces an explainable improvement plan. Its purpose is not to replace specialist tooling. It provides a focused, auditable diagnostic layer that can travel across agent runtimes.
 
-DependencyMedic inspects project structure and checks whether a recognizable dependency manifest is present. It turns a small but important piece of repository evidence into an explainable recommendation.
+## What makes it different
 
-### Diagnostic fingerprint
-
-**Manifest discovery → dependency signal → evidence → action**
-
-It recognizes common ecosystems such as npm, Python, Maven, and Gradle through their manifest files.
-
-## Why this agent is distinct
-
-DependencyMedic is deliberately focused on the dependency boundary of a project. It does not claim to solve every supply-chain problem. Its purpose is to establish whether the project exposes a clear source of dependency declarations that other automation can inspect.
-
-That narrow scope makes the agent easy to compose with security, packaging, and deployment diagnostics.
-
-## Passport architecture
+This project follows an **evidence → decision → explanation** model:
 
 ```text
-Project tree
-   ↓
-Manifest detector
-   ↓
-Dependency diagnostic rule
-   ↓
-Evidence-backed finding
-   ↓
-Improvement plan
+Project
+  ↓
+Scanner
+  ↓
+Domain Evidence
+  ↓
+Deterministic Diagnostic Rule
+  ↓
+Finding + Evidence + Confidence
+  ↓
+Improvement Plan
 ```
 
-The passport defines the identity and behavior contract, while the checker owns the domain-specific signal.
+The agent does not invent evidence. A finding is tied to what the scanner can actually observe.
+
+## Diagnostic contract
+
+| Layer | DependencyMedic behavior |
+| --- | --- |
+| Domain | project dependencies |
+| Primary signal | package.json, requirements.txt, pyproject.toml, pom.xml, build.gradle |
+| Remediation | Add or verify the dependency manifest |
+| Output | Structured, explainable findings |
+| Uncertainty | Explicitly constrained by available evidence |
+
+## Portable architecture
+
+```text
+                    ┌─────────────────────┐
+                    │   Portable Agent    │
+                    │ identity + behavior  │
+                    └──────────┬──────────┘
+                               │
+              ┌────────────────┼────────────────┐
+              ↓                ↓                ↓
+          Diagnostic        Duties &         Explainability
+            Logic           Workflow           Contract
+              │
+              ↓
+        Runtime Adapters
+       ┌──────┬──────┬──────┬──────┐
+       ↓      ↓      ↓      ↓
+    OpenAI  CrewAI  Claude  Lyzr
+```
+
+The core diagnostic logic is kept separate from framework-specific adapters. This is the central design idea of the project, not four copies of the same agent wearing different hats.
+
+## Repository structure
+
+```text
+agent.yaml          # Portable identity and passport metadata
+SOUL.md             # Identity, principles, and behavior
+AGENTS.md           # Agent responsibilities
+DUTIES.md           # Maker / Checker workflow
+EXPLAINABILITY.md   # Decision, inputs, limits, and evidence contract
+core/               # Shared result model
+tools/              # Scanner and domain diagnostics
+skills/             # Declared capabilities
+workflows/          # Agent workflows
+adapters/           # Runtime-facing adapters
+tests/              # Deliberately diagnostic project fixtures
+```
+
+## Passport portability
+
+The agent is structured for the OpenGAP passport model and can be exported to:
+
+- OpenAI Agents SDK
+- CrewAI
+- Claude Code
+- Lyzr
+
+The important part is the **portable contract**: identity, behavior, duties, explainability, tools, and skills remain defined independently of a single runtime.
 
 ## Verification
 
-Included in this repository:
-- OpenGAP-compatible `agent.yaml`
-- behavior contract in `SOUL.md`
-- explainability contract
-- four portability adapters
-- dependency-focused broken-project fixture
-- adapter verification tests
+The repository includes:
 
-The OpenGAP validator and four framework exports have been exercised successfully.
+- Local adapter verification
+- A domain-specific broken-project fixture
+- OpenGAP-compatible passport metadata
+- Explainability requirements
+- Export verification across the supported targets
 
-## Repository layout
+The engineering workflow is:
 
 ```text
-agent.yaml / SOUL.md / EXPLAINABILITY.md
-AGENTS.md / DUTIES.md
-agent.py
-tools/scanner.py
-tools/checker.py
-adapters/
-tests/
+Validate passport
+    → Verify adapters
+    → Run diagnostic fixture
+    → Export with OpenGAP
+    → Inspect generated artifacts
 ```
 
-## Design principle
+## Scope and limitations
 
-**Declare what the project actually exposes.** DependencyMedic does not invent package information. It checks for visible project evidence and recommends the next step when that evidence is missing.
+DependencyMedic is a focused diagnostic prototype. Its conclusions are limited to the evidence and rules implemented in this repository. It should complement, not replace, production-grade static analysis, security scanners, observability platforms, CI systems, or human review where appropriate.
 
-## Medic family
+## Why this project exists
 
-DependencyMedic is a focused component in a larger set of portable engineering agents. The common passport contract gives the family consistency; the diagnostic rule gives each member its own purpose.
+This repository is one member of a deliberately modular **Medic agent family**. Each agent applies the same portable passport architecture to a different engineering failure surface.
+
+That makes the collection useful as an interoperability experiment:
+
+```text
+One passport architecture
+        +
+Different diagnostic domains
+        +
+Multiple agent runtimes
+        =
+Portable engineering-agent family
+```
+
+## Challenge context
+
+Built for the **HiDevs × Lyzr Agent Passport Challenge**, exploring portable agent identity, behavior contracts, explainability, verification, and framework interoperability.
+
+## Author
+
+**Jofil Joby**  
+[GitHub](https://github.com/Jofil-Joby)
